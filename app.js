@@ -1,9 +1,3 @@
-const RAW_CSV_URLS = {
-  selector: "https://docs.google.com/spreadsheets/d/1gOYX20vbzV0_jltJgw-7l9bc8iQDvglDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Selector_Referencias",
-  componentes: "https://docs.google.com/spreadsheets/d/1gOYX20vbzV0_jltJgw-7l9bc8iQDvglDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Componentes_Criticos",
-  explosion: "https://docs.google.com/spreadsheets/d/1gOYX20vbzV0_jltJgw-7l9bc8iQDvglDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Explosion_Necesidades"
-};
-
 const CSV_URLS = {
   selector: "/api/sheet?tab=Selector_Referencias",
   componentes: "/api/sheet?tab=Componentes_Criticos",
@@ -59,9 +53,9 @@ async function loadAllData() {
 
   try {
     const [selector, componentes, explosion] = await Promise.all([
-      loadCsv(CSV_URLS.selector),
-      loadCsv(CSV_URLS.componentes),
-      loadCsv(CSV_URLS.explosion)
+      loadCsv(CSV_URLS.selector, "Selector_Referencias"),
+      loadCsv(CSV_URLS.componentes, "Componentes_Criticos"),
+      loadCsv(CSV_URLS.explosion, "Explosion_Necesidades")
     ]);
 
     state.selector = selector;
@@ -70,10 +64,10 @@ async function loadAllData() {
 
     console.log("Selector length:", selector.length);
     console.log("Selector first row:", selector[0]);
-    
+
     console.log("Componentes length:", componentes.length);
     console.log("Componentes first row:", componentes[0]);
-    
+
     console.log("Explosion length:", explosion.length);
     console.log("Explosion first row:", explosion[0]);
 
@@ -81,29 +75,40 @@ async function loadAllData() {
     renderAll();
   } catch (error) {
     console.error(error);
-    showError("Error cargando datos. Revisa que los enlaces CSV estén publicados y sean accesibles.");
+    showError(error.message || "Error cargando datos.");
   } finally {
     showLoading(false);
   }
 }
 
-async function loadCsv(url) {
+async function loadCsv(url, name = "CSV") {
   if (!url || url.includes("PEGA_AQUI")) {
-    throw new Error("Falta configurar una URL CSV.");
+    throw new Error(`Falta configurar la URL CSV de ${name}.`);
   }
 
   const response = await fetch(url);
 
   if (!response.ok) {
-    throw new Error(`Error HTTP ${response.status} cargando ${url}`);
+    throw new Error(`${name}: error HTTP ${response.status}`);
   }
 
   const text = await response.text();
-  return csvToObjects(text);
+
+  if (text.includes("<html") || text.includes("<!DOCTYPE")) {
+    throw new Error(`${name}: la URL devuelve HTML, no CSV.`);
+  }
+
+  return csvToObjects(text, name);
 }
 
-function csvToObjects(csvText) {
-  const rows = parseCsv(csvText);
+function csvToObjects(csvText, name = "CSV") {
+  const rowsComma = parseCsv(csvText, ",");
+  const rowsSemicolon = parseCsv(csvText, ";");
+
+  const rows =
+    countUsefulCells(rowsSemicolon) > countUsefulCells(rowsComma)
+      ? rowsSemicolon
+      : rowsComma;
 
   if (!rows.length) return [];
 
@@ -113,8 +118,7 @@ function csvToObjects(csvText) {
     const hasSelectorHeader =
       normalized.includes("item madre") &&
       normalized.includes("semana") &&
-      normalized.includes("cantidad plan") &&
-      normalized.includes("score prioridad");
+      normalized.includes("cantidad plan");
 
     const hasComponentHeader =
       normalized.includes("componente") &&
@@ -124,20 +128,19 @@ function csvToObjects(csvText) {
       normalized.includes("item madre") &&
       normalized.includes("semana") &&
       normalized.includes("cantidad plan") &&
-      normalized.includes("producto madre completo") &&
       normalized.includes("componente");
 
     return hasSelectorHeader || hasComponentHeader || hasExplosionHeader;
   });
 
   if (headerRowIndex === -1) {
-    console.warn("No se encontró fila de cabecera válida", rows.slice(0, 10));
+    console.warn(`${name}: no se encontró fila de cabecera válida`, rows.slice(0, 10));
     return [];
   }
 
   const headers = rows[headerRowIndex].map(cleanHeader);
 
-  console.log("Headers detectados:", headers);
+  console.log(`${name} headers detectados:`, headers);
 
   return rows
     .slice(headerRowIndex + 1)
@@ -153,7 +156,13 @@ function csvToObjects(csvText) {
     });
 }
 
-function parseCsv(text) {
+function countUsefulCells(rows) {
+  return rows
+    .slice(0, 10)
+    .reduce((total, row) => total + row.length, 0);
+}
+
+function parseCsv(text, delimiter = ",") {
   const rows = [];
   let currentRow = [];
   let currentValue = "";
@@ -168,7 +177,7 @@ function parseCsv(text) {
       i++;
     } else if (char === '"') {
       insideQuotes = !insideQuotes;
-    } else if (char === "," && !insideQuotes) {
+    } else if (char === delimiter && !insideQuotes) {
       currentRow.push(currentValue);
       currentValue = "";
     } else if ((char === "\n" || char === "\r") && !insideQuotes) {
@@ -203,6 +212,7 @@ function normalize(value) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -257,20 +267,45 @@ function renderAll() {
 }
 
 function populateFilters() {
-  fillSelect("estadoFilter", uniqueValues(state.selector, "Estado"), "Todos los estados");
-  fillSelect("decisionFilter", uniqueValues(state.selector, "Decisión sugerida"), "Todas las decisiones");
-  fillSelect("semanaFilter", uniqueValues(state.selector, "Semana", true), "Todas las semanas");
+  fillSelect(
+    "estadoFilter",
+    uniqueValuesByGetter(state.selector, (row) => getValue(row, ["Estado"])),
+    "Todos los estados"
+  );
 
-  fillSelect("prioridadFilter", uniqueValues(state.componentes, "Prioridad"), "Todas las prioridades");
-  fillSelect("accionFilter", uniqueValues(state.componentes, "Acción sugerida"), "Todas las acciones");
+  fillSelect(
+    "decisionFilter",
+    uniqueValuesByGetter(state.selector, (row) => getValue(row, ["Decisión sugerida", "Decision sugerida"])),
+    "Todas las decisiones"
+  );
+
+  fillSelect(
+    "semanaFilter",
+    uniqueValuesByGetter(state.selector, (row) => getValue(row, ["Semana"]), true),
+    "Todas las semanas"
+  );
+
+  fillSelect(
+    "prioridadFilter",
+    uniqueValuesByGetter(state.componentes, (row) => getValue(row, ["Prioridad"])),
+    "Todas las prioridades"
+  );
+
+  fillSelect(
+    "accionFilter",
+    uniqueValuesByGetter(state.componentes, (row) => getValue(row, ["Acción sugerida", "Accion sugerida"])),
+    "Todas las acciones"
+  );
 }
 
-function uniqueValues(data, key, numeric = false) {
-  const values = [...new Set(
-    data
-      .map((row) => row[key])
-      .filter((value) => String(value || "").trim() !== "")
-  )];
+function uniqueValuesByGetter(data, getter, numeric = false) {
+  const values = [
+    ...new Set(
+      data
+        .map(getter)
+        .filter((value) => String(value || "").trim() !== "")
+    )
+  ];
 
   if (numeric) {
     return values.sort((a, b) => toNumber(a) - toNumber(b));
@@ -303,23 +338,31 @@ function renderSummary() {
   const explosion = state.explosion;
 
   setText("totalRefs", selector.length);
-  setText("fabricables", selector.filter((r) => getValue(r, ["Estado"]) === "FABRICABLE").length);
-  setText("atacarYa", selector.filter((r) => getValue(r, ["Decisión sugerida", "Decision sugerida"]) === "Atacar ya").length);
+
+  setText(
+    "fabricables",
+    selector.filter((r) => getValue(r, ["Estado"]) === "FABRICABLE").length
+  );
+
+  setText(
+    "atacarYa",
+    selector.filter((r) => getValue(r, ["Decisión sugerida", "Decision sugerida"]) === "Atacar ya").length
+  );
 
   setText(
     "componentesDeficit",
-    componentes.filter((r) => toNumber(r["Déficit total"]) > 0).length
+    componentes.filter((r) => toNumber(getValue(r, ["Déficit total", "Deficit total"])) > 0).length
   );
 
   setText(
     "componentesCriticos",
-    componentes.filter((r) => r["Prioridad"] === "CRITICA").length
+    componentes.filter((r) => getValue(r, ["Prioridad"]) === "CRITICA").length
   );
 
   setText(
-  "sinBom",
-  explosion.filter((r) => getValue(r, ["Estado"]) === "SIN BOM").length
-);
+    "sinBom",
+    explosion.filter((r) => getValue(r, ["Estado"]) === "SIN BOM").length
+  );
 }
 
 function setText(id, value) {
@@ -335,15 +378,35 @@ function renderSelector() {
   let rows = [...state.selector];
 
   rows = rows.filter((row) => {
-    const matchesSearch = !search || normalize(row["Item madre"]).includes(search);
-    const matchesEstado = !estado || row["Estado"] === estado;
-    const matchesDecision = !decision || row["Decisión sugerida"] === decision;
-    const matchesSemana = !semana || String(row["Semana"]) === String(semana);
+    const item = getValue(row, ["Item madre", "Item"]);
+    const rowEstado = getValue(row, ["Estado"]);
+    const rowDecision = getValue(row, ["Decisión sugerida", "Decision sugerida"]);
+    const rowSemana = getValue(row, ["Semana"]);
+
+    const matchesSearch = !search || normalize(item).includes(search);
+    const matchesEstado = !estado || rowEstado === estado;
+    const matchesDecision = !decision || rowDecision === decision;
+    const matchesSemana = !semana || String(rowSemana) === String(semana);
 
     return matchesSearch && matchesEstado && matchesDecision && matchesSemana;
   });
 
-  rows.sort((a, b) => toNumber(b["Score prioridad"]) - toNumber(a["Score prioridad"]));
+  rows.sort((a, b) => {
+    return toNumber(getValue(b, ["Score prioridad", "Score"])) -
+      toNumber(getValue(a, ["Score prioridad", "Score"]));
+  });
+
+  const displayRows = rows.map((row) => ({
+    "Item madre": getValue(row, ["Item madre", "Item"]),
+    "Semana": getValue(row, ["Semana"]),
+    "Cantidad plan": getValue(row, ["Cantidad plan", "Cantidad"]),
+    "Componentes faltantes": getValue(row, ["Componentes faltantes", "Faltantes"]),
+    "% cubierto": getValue(row, ["% cubierto", "Cubierto"]),
+    "Unidades posibles": getValue(row, ["Unidades posibles"]),
+    "Estado": getValue(row, ["Estado"]),
+    "Score prioridad": getValue(row, ["Score prioridad", "Score"]),
+    "Decisión sugerida": getValue(row, ["Decisión sugerida", "Decision sugerida"])
+  }));
 
   const columns = [
     "Item madre",
@@ -357,7 +420,7 @@ function renderSelector() {
     "Decisión sugerida"
   ];
 
-  renderTable("selectorTable", rows, columns, {
+  renderTable("selectorTable", displayRows, columns, {
     "Item madre": (value) => `<span class="clickable" onclick="openDetail('${escapeAttr(value)}')">${escapeHtml(value)}</span>`,
     "% cubierto": formatPercent,
     "Cantidad plan": formatNumber,
@@ -375,21 +438,42 @@ function renderComponentes() {
   let rows = [...state.componentes];
 
   rows = rows.filter((row) => {
-    const matchesSearch = !search || normalize(row["Componente"]).includes(search);
-    const matchesPrioridad = !prioridad || row["Prioridad"] === prioridad;
-    const matchesAccion = !accion || row["Acción sugerida"] === accion;
+    const componente = getValue(row, ["Componente"]);
+    const rowPrioridad = getValue(row, ["Prioridad"]);
+    const rowAccion = getValue(row, ["Acción sugerida", "Accion sugerida"]);
+
+    const matchesSearch = !search || normalize(componente).includes(search);
+    const matchesPrioridad = !prioridad || rowPrioridad === prioridad;
+    const matchesAccion = !accion || rowAccion === accion;
 
     return matchesSearch && matchesPrioridad && matchesAccion;
   });
 
   rows.sort((a, b) => {
-    const semanaA = toNumber(a["Primera semana afectada"]) || 999;
-    const semanaB = toNumber(b["Primera semana afectada"]) || 999;
+    const semanaA = toNumber(getValue(a, ["Primera semana afectada", "Primera semana"])) || 999;
+    const semanaB = toNumber(getValue(b, ["Primera semana afectada", "Primera semana"])) || 999;
 
     if (semanaA !== semanaB) return semanaA - semanaB;
 
-    return toNumber(b["Déficit total"]) - toNumber(a["Déficit total"]);
+    return toNumber(getValue(b, ["Déficit total", "Deficit total"])) -
+      toNumber(getValue(a, ["Déficit total", "Deficit total"]));
   });
+
+  const displayRows = rows.map((row) => ({
+    "Componente": getValue(row, ["Componente"]),
+    "Productos afectados": getValue(row, ["Productos afectados"]),
+    "Items afectados": getValue(row, ["Items afectados"]),
+    "Semanas afectadas": getValue(row, ["Semanas afectadas"]),
+    "Primera semana afectada": getValue(row, ["Primera semana afectada", "Primera semana"]),
+    "Nº líneas afectadas": getValue(row, ["Nº líneas afectadas", "No lineas afectadas", "N líneas afectadas"]),
+    "Necesidad total": getValue(row, ["Necesidad total"]),
+    "Stock actual": getValue(row, ["Stock actual", "Stock"]),
+    "Déficit total": getValue(row, ["Déficit total", "Deficit total"]),
+    "Déficit acumulado hasta primera semana": getValue(row, ["Déficit acumulado hasta primera semana", "Deficit acumulado hasta primera semana"]),
+    "Peor plazo": getValue(row, ["Peor plazo"]),
+    "Prioridad": getValue(row, ["Prioridad"]),
+    "Acción sugerida": getValue(row, ["Acción sugerida", "Accion sugerida"])
+  }));
 
   const columns = [
     "Componente",
@@ -407,7 +491,7 @@ function renderComponentes() {
     "Acción sugerida"
   ];
 
-  renderTable("componentesTable", rows, columns, {
+  renderTable("componentesTable", displayRows, columns, {
     "Necesidad total": formatNumber,
     "Stock actual": formatNumber,
     "Déficit total": formatNumber,
@@ -419,7 +503,9 @@ function renderComponentes() {
 function renderSinBom() {
   const rows = state.explosion
     .filter((row) => getValue(row, ["Estado"]) === "SIN BOM")
-    .sort((a, b) => toNumber(getValue(a, ["Semana"])) - toNumber(getValue(b, ["Semana"])));
+    .sort((a, b) => {
+      return toNumber(getValue(a, ["Semana"])) - toNumber(getValue(b, ["Semana"]));
+    });
 
   const displayRows = rows.map((row) => ({
     "Item madre": getValue(row, ["Item madre", "Item"]),
