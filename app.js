@@ -1,7 +1,13 @@
-const CSV_URLS = {
+const RAW_CSV_URLS = {
   selector: "https://docs.google.com/spreadsheets/d/1gOYX20vbzV0_jltJgw-7l9bc8iQDvglDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Selector_Referencias",
   componentes: "https://docs.google.com/spreadsheets/d/1gOYX20vbzV0_jltJgw-7l9bc8iQDvglDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Componentes_Criticos",
   explosion: "https://docs.google.com/spreadsheets/d/1gOYX20vbzV0_jltJgw-7l9bc8iQDvglDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Explosion_Necesidades"
+};
+
+const CSV_URLS = {
+  selector: `https://api.allorigins.win/raw?url=${encodeURIComponent(RAW_CSV_URLS.selector)}`,
+  componentes: `https://api.allorigins.win/raw?url=${encodeURIComponent(RAW_CSV_URLS.componentes)}`,
+  explosion: `https://api.allorigins.win/raw?url=${encodeURIComponent(RAW_CSV_URLS.explosion)}`
 };
 
 const state = {
