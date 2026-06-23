@@ -5,9 +5,9 @@ const RAW_CSV_URLS = {
 };
 
 const CSV_URLS = {
-  selector: `https://api.allorigins.win/raw?url=${encodeURIComponent(RAW_CSV_URLS.selector)}`,
-  componentes: `https://api.allorigins.win/raw?url=${encodeURIComponent(RAW_CSV_URLS.componentes)}`,
-  explosion: `https://api.allorigins.win/raw?url=${encodeURIComponent(RAW_CSV_URLS.explosion)}`
+  selector: "/api/sheet?tab=Selector_Referencias",
+  componentes: "/api/sheet?tab=Componentes_Criticos",
+  explosion: "/api/sheet?tab=Explosion_Necesidades"
 };
 
 const state = {
