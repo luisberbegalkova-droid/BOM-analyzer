@@ -113,7 +113,8 @@ function csvToObjects(csvText) {
     const hasSelectorHeader =
       normalized.includes("item madre") &&
       normalized.includes("semana") &&
-      normalized.includes("cantidad plan");
+      normalized.includes("cantidad plan") &&
+      normalized.includes("score prioridad");
 
     const hasComponentHeader =
       normalized.includes("componente") &&
@@ -121,8 +122,10 @@ function csvToObjects(csvText) {
 
     const hasExplosionHeader =
       normalized.includes("item madre") &&
-      normalized.includes("componente") &&
-      normalized.includes("stock actual");
+      normalized.includes("semana") &&
+      normalized.includes("cantidad plan") &&
+      normalized.includes("producto madre completo") &&
+      normalized.includes("componente");
 
     return hasSelectorHeader || hasComponentHeader || hasExplosionHeader;
   });
@@ -314,9 +317,9 @@ function renderSummary() {
   );
 
   setText(
-    "sinBom",
-    explosion.filter((r) => r["Estado"] === "SIN BOM").length
-  );
+  "sinBom",
+  explosion.filter((r) => getValue(r, ["Estado"]) === "SIN BOM").length
+);
 }
 
 function setText(id, value) {
@@ -415,8 +418,16 @@ function renderComponentes() {
 
 function renderSinBom() {
   const rows = state.explosion
-    .filter((row) => row["Estado"] === "SIN BOM")
-    .sort((a, b) => toNumber(a["Semana"]) - toNumber(b["Semana"]));
+    .filter((row) => getValue(row, ["Estado"]) === "SIN BOM")
+    .sort((a, b) => toNumber(getValue(a, ["Semana"])) - toNumber(getValue(b, ["Semana"])));
+
+  const displayRows = rows.map((row) => ({
+    "Item madre": getValue(row, ["Item madre", "Item"]),
+    "Semana": getValue(row, ["Semana"]),
+    "Cantidad plan": getValue(row, ["Cantidad plan", "Cantidad"]),
+    "Producto madre completo": getValue(row, ["Producto madre completo", "Producto madre"]),
+    "Estado": getValue(row, ["Estado"])
+  }));
 
   const columns = [
     "Item madre",
@@ -426,7 +437,7 @@ function renderSinBom() {
     "Estado"
   ];
 
-  renderTable("sinBomTable", rows, columns, {
+  renderTable("sinBomTable", displayRows, columns, {
     "Cantidad plan": formatNumber,
     "Estado": renderEstadoBadge
   });
@@ -435,7 +446,13 @@ function renderSinBom() {
 function renderItemSelect() {
   const select = document.getElementById("itemDetailSelect");
 
-  const items = uniqueValues(state.selector, "Item madre", false);
+  const items = [
+    ...new Set(
+      state.explosion
+        .map((row) => getValue(row, ["Item madre", "Item"]))
+        .filter((value) => String(value || "").trim() !== "")
+    )
+  ].sort((a, b) => String(a).localeCompare(String(b), "es"));
 
   select.innerHTML = `<option value="">Selecciona un item...</option>`;
 
@@ -481,15 +498,19 @@ function renderDetalleProducto() {
     return;
   }
 
-  let rows = state.explosion.filter((row) => row["Item madre"] === item);
+  let rows = state.explosion.filter((row) => {
+    return getValue(row, ["Item madre", "Item"]) === item;
+  });
 
   if (estadoFilter) {
-    rows = rows.filter((row) => row["Estado"] === estadoFilter);
+    rows = rows.filter((row) => {
+      return getValue(row, ["Estado"]) === estadoFilter;
+    });
   }
 
   const total = rows.length;
-  const faltan = rows.filter((row) => row["Estado"] === "FALTA").length;
-  const ok = rows.filter((row) => row["Estado"] === "OK").length;
+  const faltan = rows.filter((row) => getValue(row, ["Estado"]) === "FALTA").length;
+  const ok = rows.filter((row) => getValue(row, ["Estado"]) === "OK").length;
 
   document.getElementById("detailSummary").innerHTML = `
     <div class="detail-pill"><strong>${escapeHtml(item)}</strong></div>
@@ -497,6 +518,18 @@ function renderDetalleProducto() {
     <div class="detail-pill">OK: <strong>${ok}</strong></div>
     <div class="detail-pill">Faltan: <strong>${faltan}</strong></div>
   `;
+
+  const displayRows = rows.map((row) => ({
+    "Item madre": getValue(row, ["Item madre", "Item"]),
+    "Semana": getValue(row, ["Semana"]),
+    "Cantidad plan": getValue(row, ["Cantidad plan", "Cantidad"]),
+    "Componente": getValue(row, ["Componente"]),
+    "Cantidad escandallo": getValue(row, ["Cantidad escandallo", "Cantidad escandallo "]),
+    "Necesidad componente": getValue(row, ["Necesidad componente", "Necesidad"]),
+    "Stock actual": getValue(row, ["Stock actual", "Stock"]),
+    "Plazo entrega": getValue(row, ["Plazo entrega", "Plazo de entrega"]),
+    "Estado": getValue(row, ["Estado"])
+  }));
 
   const columns = [
     "Item madre",
@@ -510,7 +543,7 @@ function renderDetalleProducto() {
     "Estado"
   ];
 
-  renderTable("detalleTable", rows, columns, {
+  renderTable("detalleTable", displayRows, columns, {
     "Cantidad plan": formatNumber,
     "Cantidad escandallo": formatNumber,
     "Necesidad componente": formatNumber,
