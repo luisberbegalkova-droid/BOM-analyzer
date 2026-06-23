@@ -68,6 +68,15 @@ async function loadAllData() {
     state.componentes = componentes;
     state.explosion = explosion;
 
+    console.log("Selector length:", selector.length);
+    console.log("Selector first row:", selector[0]);
+    
+    console.log("Componentes length:", componentes.length);
+    console.log("Componentes first row:", componentes[0]);
+    
+    console.log("Explosion length:", explosion.length);
+    console.log("Explosion first row:", explosion[0]);
+
     populateFilters();
     renderAll();
   } catch (error) {
