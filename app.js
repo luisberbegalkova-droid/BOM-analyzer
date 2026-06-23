@@ -1,6 +1,6 @@
 const CSV_URLS = {
-  selector: "https://docs.google.com/spreadsheets/d/1gOYX20vbzVO_jltJgw-7l9bc8iQDvgIDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Selector_Referencias",
-  componentes: "https://docs.google.com/spreadsheets/d/1gOYX20vbzVO_jltJgw-7l9bc8iQDvgIDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Componentes_Criticos",
+  selector: "https://docs.google.com/spreadsheets/d/1gOYX20vbzV0_jltJgw-7l9bc8iQDvglDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Selector_Referencias",
+  componentes: "https://docs.google.com/spreadsheets/d/1gOYX20vbzV0_jltJgw-7l9bc8iQDvglDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Componentes_Criticos",
   explosion: "https://docs.google.com/spreadsheets/d/1gOYX20vbzV0_jltJgw-7l9bc8iQDvglDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Explosion_Necesidades"
 };
 
