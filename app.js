@@ -107,10 +107,37 @@ function csvToObjects(csvText) {
 
   if (!rows.length) return [];
 
-  const headers = rows[0].map(cleanHeader);
+  const headerRowIndex = rows.findIndex((row) => {
+    const normalized = row.map((cell) => normalize(cell));
+
+    const hasSelectorHeader =
+      normalized.includes("item madre") &&
+      normalized.includes("semana") &&
+      normalized.includes("cantidad plan");
+
+    const hasComponentHeader =
+      normalized.includes("componente") &&
+      normalized.includes("productos afectados");
+
+    const hasExplosionHeader =
+      normalized.includes("item madre") &&
+      normalized.includes("componente") &&
+      normalized.includes("stock actual");
+
+    return hasSelectorHeader || hasComponentHeader || hasExplosionHeader;
+  });
+
+  if (headerRowIndex === -1) {
+    console.warn("No se encontró fila de cabecera válida", rows.slice(0, 10));
+    return [];
+  }
+
+  const headers = rows[headerRowIndex].map(cleanHeader);
+
+  console.log("Headers detectados:", headers);
 
   return rows
-    .slice(1)
+    .slice(headerRowIndex + 1)
     .filter((row) => row.some((cell) => String(cell || "").trim() !== ""))
     .map((row) => {
       const obj = {};
