@@ -1,7 +1,7 @@
 const CSV_URLS = {
-  selector: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKEQPigRheYbDewxHuCHlHixGeOa31Yd0VwJuR50jWKYVyGN4PTK_kcnrhoYAnlUr5sriN3orkpXy/pub?gid=1538008874&single=true&output=csv",
-  componentes: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKEQPigRheYbDewxHuCHlHixGeOa31Yd0VwJuR50jWKYVyGN4PTK_kcnrhoYAnlUr5sriN3orkpXy/pub?gid=1229449388&single=true&output=csv",
-  explosion: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKEQPigRheYbDewxHuCHlHixGeOa31Yd0VwJuR50jWKYVyGN4PTK_kcnrhoYAnlUr5sriN3orkpXy/pub?gid=1342410407&single=true&output=csv"
+  selector: "https://docs.google.com/spreadsheets/d/1gOYX20vbzVO_jltJgw-7l9bc8iQDvgIDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Selector_Referencias",
+  componentes: "https://docs.google.com/spreadsheets/d/1gOYX20vbzVO_jltJgw-7l9bc8iQDvgIDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Componentes_Criticos",
+  explosion: "https://docs.google.com/spreadsheets/d/1gOYX20vbzVO_jltJgw-7l9bc8iQDvgIDdDhfOoS9SfQ/gviz/tq?tqx=out:csv&sheet=Explosion_Necesidades"
 };
 
 const state = {
