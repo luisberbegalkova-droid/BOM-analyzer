@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analizador BOMs INJUSA</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Analizador BOMs INJUSA</h1>
+      <p>Selector de referencias, componentes críticos y detalle de necesidades.</p>
+    </div>
+
+    <button id="refreshBtn" class="primary-btn">Actualizar datos</button>
+  </header>
+
+  <main>
+    <section class="summary-grid">
+      <div class="card">
+        <span class="card-label">Referencias planificadas</span>
+        <strong id="totalRefs">-</strong>
+      </div>
+
+      <div class="card">
+        <span class="card-label">Fabricables</span>
+        <strong id="fabricables">-</strong>
+      </div>
+
+      <div class="card">
+        <span class="card-label">Atacar ya</span>
+        <strong id="atacarYa">-</strong>
+      </div>
+
+      <div class="card">
+        <span class="card-label">Componentes con déficit</span>
+        <strong id="componentesDeficit">-</strong>
+      </div>
+
+      <div class="card">
+        <span class="card-label">Componentes críticos</span>
+        <strong id="componentesCriticos">-</strong>
+      </div>
+
+      <div class="card">
+        <span class="card-label">SIN BOM</span>
+        <strong id="sinBom">-</strong>
+      </div>
+    </section>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="selector">Selector referencias</button>
+      <button class="tab-btn" data-tab="componentes">Componentes críticos</button>
+      <button class="tab-btn" data-tab="sinbom">SIN BOM</button>
+      <button class="tab-btn" data-tab="detalle">Detalle producto</button>
+    </nav>
+
+    <section id="selector" class="tab-content active">
+      <div class="section-header">
+        <div>
+          <h2>Selector de referencias</h2>
+          <p>Ranking de productos a fabricar, atacar o aparcar.</p>
+        </div>
+      </div>
+
+      <div class="filters">
+        <input id="selectorSearch" type="text" placeholder="Buscar item..." />
+
+        <select id="estadoFilter">
+          <option value="">Todos los estados</option>
+        </select>
+
+        <select id="decisionFilter">
+          <option value="">Todas las decisiones</option>
+        </select>
+
+        <select id="semanaFilter">
+          <option value="">Todas las semanas</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table id="selectorTable"></table>
+      </div>
+    </section>
+
+    <section id="componentes" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h2>Componentes críticos</h2>
+          <p>Componentes que bloquean producción por déficit, semana o plazo.</p>
+        </div>
+      </div>
+
+      <div class="filters">
+        <input id="componentSearch" type="text" placeholder="Buscar componente..." />
+
+        <select id="prioridadFilter">
+          <option value="">Todas las prioridades</option>
+        </select>
+
+        <select id="accionFilter">
+          <option value="">Todas las acciones</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table id="componentesTable"></table>
+      </div>
+    </section>
+
+    <section id="sinbom" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h2>Items SIN BOM</h2>
+          <p>Referencias planificadas que no han encontrado escandallo.</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="sinBomTable"></table>
+      </div>
+    </section>
+
+    <section id="detalle" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h2>Detalle producto</h2>
+          <p>Selecciona un item para ver sus componentes, stock, necesidad y déficit.</p>
+        </div>
+      </div>
+
+      <div class="filters">
+        <select id="itemDetailSelect">
+          <option value="">Selecciona un item...</option>
+        </select>
+
+        <select id="detailEstadoFilter">
+          <option value="">Todos los componentes</option>
+          <option value="FALTA">Solo faltantes</option>
+          <option value="OK">Solo OK</option>
+        </select>
+      </div>
+
+      <div id="detailSummary" class="detail-summary"></div>
+
+      <div class="table-wrap">
+        <table id="detalleTable"></table>
+      </div>
+    </section>
+
+    <div id="loading" class="loading hidden">
+      Cargando datos...
+    </div>
+
+    <div id="errorBox" class="error-box hidden"></div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
