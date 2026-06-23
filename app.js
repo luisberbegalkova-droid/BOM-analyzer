@@ -94,6 +94,10 @@ async function loadCsv(url, name = "CSV") {
 
   const text = await response.text();
 
+  console.log(`===== RAW ${name} =====`);
+  console.log(text.slice(0, 1000));
+  console.log(`===== FIN RAW ${name} =====`);
+
   if (text.includes("<html") || text.includes("<!DOCTYPE")) {
     throw new Error(`${name}: la URL devuelve HTML, no CSV.`);
   }
