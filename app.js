@@ -203,6 +203,18 @@ function normalize(value) {
     .trim();
 }
 
+function getValue(row, possibleKeys) {
+  const keys = Object.keys(row || {});
+
+  for (const wanted of possibleKeys) {
+    const wantedNorm = normalize(wanted);
+    const foundKey = keys.find((key) => normalize(key) === wantedNorm);
+    if (foundKey) return row[foundKey];
+  }
+
+  return "";
+}
+
 function toNumber(value) {
   if (typeof value === "number") return value;
 
@@ -288,8 +300,8 @@ function renderSummary() {
   const explosion = state.explosion;
 
   setText("totalRefs", selector.length);
-  setText("fabricables", selector.filter((r) => r["Estado"] === "FABRICABLE").length);
-  setText("atacarYa", selector.filter((r) => r["Decisión sugerida"] === "Atacar ya").length);
+  setText("fabricables", selector.filter((r) => getValue(r, ["Estado"]) === "FABRICABLE").length;
+  setText("atacarYa", selector.filter((r) => getValue(r, ["Decisión sugerida", "Decision sugerida"]) === "Atacar ya").length;
 
   setText(
     "componentesDeficit",
