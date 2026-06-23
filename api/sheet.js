@@ -1,20 +1,22 @@
 export default async function handler(req, res) {
   const { tab } = req.query;
 
-  const allowedTabs = [
-    "Selector_Referencias",
-    "Componentes_Criticos",
-    "Explosion_Necesidades"
-  ];
+  const publishedCsvUrls = {
+    Selector_Referencias:
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKEQPigRheYbDewxHuCHlHixGeOa31Yd0VwJuR50jWKYVyGN4PTK_kcnrhoYAnlUr5sriN3orkpXy/pub?gid=1538008874&single=true&output=csv",
 
-  if (!allowedTabs.includes(tab)) {
+    Componentes_Criticos:
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKEQPigRheYbDewxHuCHlHixGeOa31Yd0VwJuR50jWKYVyGN4PTK_kcnrhoYAnlUr5sriN3orkpXy/pub?gid=1229449388&single=true&output=csv",
+
+    Explosion_Necesidades:
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKEQPigRheYbDewxHuCHlHixGeOa31Yd0VwJuR50jWKYVyGN4PTK_kcnrhoYAnlUr5sriN3orkpXy/pub?gid=1342410407&single=true&output=csv"
+  };
+
+  const url = publishedCsvUrls[tab];
+
+  if (!url) {
     return res.status(400).send("Tab no permitida");
   }
-
-  const sheetId = "1gOYX20vbzV0_jltJgw-7l9bc8iQDvglDdDhfOoS9SfQ";
-
-  const url =
-    `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
 
   try {
     const response = await fetch(url);
@@ -22,7 +24,7 @@ export default async function handler(req, res) {
     if (!response.ok) {
       return res
         .status(response.status)
-        .send(`Error leyendo Google Sheets: ${response.status}`);
+        .send(`Error leyendo Google Sheets publicado: ${response.status}`);
     }
 
     const csv = await response.text();
