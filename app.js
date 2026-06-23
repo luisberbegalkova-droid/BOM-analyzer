@@ -304,7 +304,7 @@ function renderSummary() {
 
   setText("totalRefs", selector.length);
   setText("fabricables", selector.filter((r) => getValue(r, ["Estado"]) === "FABRICABLE").length);
-  setText("atacarYa", selector.filter((r) => getValue(r, ["Decisión sugerida", "Decision sugerida"]) === "Atacar ya").length;
+  setText("atacarYa", selector.filter((r) => getValue(r, ["Decisión sugerida", "Decision sugerida"]) === "Atacar ya").length);
 
   setText(
     "componentesDeficit",
