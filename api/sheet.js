@@ -3,13 +3,13 @@ export default async function handler(req, res) {
 
   const publishedCsvUrls = {
     Selector_Referencias:
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKEQPigRheYbDewxHuCHlHixGeOa31Yd0VwJuR50jWKYVyGN4PTK_kcnrhoYAnlUr5sriN3orkpXy/pub?gid=1538008874&single=true&output=csv",
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKEQPigRheYbDewxHuCHlHixGeOa31Yd0VwJuR50jWKYVyGN4PTK_kcnrhoYAnlUr5sriN3orkpXy/pub?gid=1507911722&single=true&output=csv",
 
     Componentes_Criticos:
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKEQPigRheYbDewxHuCHlHixGeOa31Yd0VwJuR50jWKYVyGN4PTK_kcnrhoYAnlUr5sriN3orkpXy/pub?gid=1229449388&single=true&output=csv",
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKEQPigRheYbDewxHuCHlHixGeOa31Yd0VwJuR50jWKYVyGN4PTK_kcnrhoYAnlUr5sriN3orkpXy/pub?gid=1812453680&single=true&output=csv",
 
     Explosion_Necesidades:
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKEQPigRheYbDewxHuCHlHixGeOa31Yd0VwJuR50jWKYVyGN4PTK_kcnrhoYAnlUr5sriN3orkpXy/pub?gid=1342410407&single=true&output=csv"
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKEQPigRheYbDewxHuCHlHixGeOa31Yd0VwJuR50jWKYVyGN4PTK_kcnrhoYAnlUr5sriN3orkpXy/pub?gid=786204431&single=true&output=csv"
   };
 
   const url = publishedCsvUrls[tab];
