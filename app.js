@@ -524,7 +524,7 @@ function renderDetalleProducto() {
     "Semana": getValue(row, ["Semana"]),
     "Cantidad plan": getValue(row, ["Cantidad plan", "Cantidad"]),
     "Componente": getValue(row, ["Componente"]),
-    "Cantidad escandallo": getValue(row, ["Cantidad escandallo", "Cantidad escandallo "]),
+    "Cantidad escandallo": getValue(row, ["Cantidad escandallo"]),
     "Necesidad componente": getValue(row, ["Necesidad componente", "Necesidad"]),
     "Stock actual": getValue(row, ["Stock actual", "Stock"]),
     "Plazo entrega": getValue(row, ["Plazo entrega", "Plazo de entrega"]),
