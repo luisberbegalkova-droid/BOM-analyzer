@@ -441,9 +441,18 @@ function renderSelector() {
   });
 
   rows.sort((a, b) => {
-    return toNumber(getValue(b, ["Score prioridad", "Score"])) -
-      toNumber(getValue(a, ["Score prioridad", "Score"]));
-  });
+  const semanaA = toNumber(getValue(a, ["Semana"]));
+  const semanaB = toNumber(getValue(b, ["Semana"]));
+
+  if (semanaA !== semanaB) {
+    return semanaA - semanaB;
+  }
+
+  const itemA = getValue(a, ["Item madre", "Item"]);
+  const itemB = getValue(b, ["Item madre", "Item"]);
+
+  return String(itemA).localeCompare(String(itemB), "es");
+});
 
   const displayRows = rows.map((row) => ({
     "Item madre": getValue(row, ["Item madre", "Item"]),
