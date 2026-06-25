@@ -43,7 +43,7 @@ function setupEvents() {
       await loadAllData();
     });
   }
-  
+
   document.getElementById("selectorSearch").addEventListener("input", renderSelector);
   document.getElementById("estadoFilter").addEventListener("change", renderSelector);
   document.getElementById("decisionFilter").addEventListener("change", renderSelector);
@@ -54,12 +54,13 @@ function setupEvents() {
   document.getElementById("accionFilter").addEventListener("change", renderComponentes);
 
   document.getElementById("itemDetailSelect").addEventListener("change", renderDetalleProducto);
+
   const detailEstadoFilter = document.getElementById("detailEstadoFilter");
+
   if (detailEstadoFilter) {
     detailEstadoFilter.value = "FALTA";
+    detailEstadoFilter.addEventListener("change", renderDetalleProducto);
   }
-  
-  document.getElementById("detailEstadoFilter").addEventListener("change", renderDetalleProducto);
 }
 
 function setupTabs() {
@@ -105,8 +106,6 @@ async function loadAllData() {
     state.selector = selector;
     state.explosion = explosion;
     state.componentes = componentes;
-
-    state.selectedProduct = null;
 
     console.log("Escenario:", currentScenario);
     console.log("Selector name:", selectorName);
@@ -471,7 +470,8 @@ function renderSelector() {
   ];
 
   renderTable("selectorTable", displayRows, columns, {
-    "Item madre": (value) => `<span class="clickable" onclick="openDetail('${escapeAttr(value)}')">${escapeHtml(value)}</span>`,
+    "Item madre": (value, row) =>
+      `<span class="clickable" onclick="openDetail('${escapeAttr(value)}', '${escapeAttr(row["Semana"])}')">${escapeHtml(value)}</span>`,
     "% cubierto": formatPercent,
     "Cantidad plan": formatNumber,
     "Unidades posibles": formatNumber,
@@ -481,6 +481,26 @@ function renderSelector() {
 }
 
 function renderComponentes() {
+  if (!SCENARIOS[currentScenario].showComponentesCriticos) {
+    renderTable("componentesTable", [], [
+      "Componente",
+      "Productos afectados",
+      "Items afectados",
+      "Semanas afectadas",
+      "Primera semana afectada",
+      "Nº líneas afectadas",
+      "Necesidad total",
+      "Stock actual",
+      "Déficit total",
+      "Déficit acumulado hasta primera semana",
+      "Peor plazo",
+      "Prioridad",
+      "Acción sugerida"
+    ]);
+
+    return;
+  }
+
   const search = normalize(document.getElementById("componentSearch").value);
   const prioridad = document.getElementById("prioridadFilter").value;
   const accion = document.getElementById("accionFilter").value;
@@ -548,22 +568,6 @@ function renderComponentes() {
     "Déficit acumulado hasta primera semana": formatNumber,
     "Prioridad": renderPrioridadBadge
   });
-
-  if (!SCENARIOS[currentScenario].showComponentesCriticos) {
-  const tbody = document.getElementById("componentesTableBody");
-
-  if (tbody) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="13" class="empty-state">
-          Componentes críticos solo aplica al escenario “Cumplir plan acumulado”.
-        </td>
-      </tr>
-    `;
-  }
-
-  return;
-}
 }
 
 function renderSinBom() {
@@ -598,27 +602,55 @@ function renderSinBom() {
 function renderItemSelect() {
   const select = document.getElementById("itemDetailSelect");
 
-  const items = [
-    ...new Set(
-      state.explosion
-        .map((row) => getValue(row, ["Item madre", "Item"]))
-        .filter((value) => String(value || "").trim() !== "")
-    )
-  ].sort((a, b) => String(a).localeCompare(String(b), "es"));
+  const pares = [];
+
+  state.explosion.forEach((row) => {
+    const item = getValue(row, ["Item madre", "Item"]);
+    const semana = getValue(row, ["Semana"]);
+
+    if (!item || !semana) {
+      return;
+    }
+
+    const clave = `${item}||${semana}`;
+
+    if (!pares.some((p) => p.clave === clave)) {
+      pares.push({
+        clave,
+        item,
+        semana
+      });
+    }
+  });
+
+  pares.sort((a, b) => {
+    const semanaA = toNumber(a.semana);
+    const semanaB = toNumber(b.semana);
+
+    if (semanaA !== semanaB) {
+      return semanaA - semanaB;
+    }
+
+    return String(a.item).localeCompare(String(b.item), "es");
+  });
 
   select.innerHTML = `<option value="">Selecciona un item...</option>`;
 
-  items.forEach((item) => {
+  pares.forEach((par) => {
     const option = document.createElement("option");
-    option.value = item;
-    option.textContent = `${item} - Sem ${semana}`;
-    option.dataset.semana = semana;
+
+    option.value = par.clave;
+    option.textContent = `${par.item} - Sem ${par.semana}`;
+    option.dataset.item = par.item;
+    option.dataset.semana = par.semana;
+
     select.appendChild(option);
   });
 }
 
-function openDetail(item) {
-  const decoded = decodeURIComponent(item);
+function openDetail(item, semana = "") {
+  const decodedItem = decodeURIComponent(item);
+  const decodedSemana = decodeURIComponent(semana || "");
 
   document.querySelectorAll(".tab-btn").forEach((button) => {
     button.classList.toggle("active", button.dataset.tab === "detalle");
@@ -628,12 +660,29 @@ function openDetail(item) {
     content.classList.toggle("active", content.id === "detalle");
   });
 
-  document.getElementById("itemDetailSelect").value = decoded;
+  const select = document.getElementById("itemDetailSelect");
+
+  const option = [...select.options].find((opt) => {
+    const optItem = opt.dataset.item || "";
+    const optSemana = opt.dataset.semana || "";
+
+    return String(optItem) === String(decodedItem) &&
+      (!decodedSemana || String(optSemana) === String(decodedSemana));
+  });
+
+  if (option) {
+    select.value = option.value;
+  }
+
   renderDetalleProducto();
 }
 
 function renderDetalleProducto() {
-  const item = document.getElementById("itemDetailSelect").value;
+  const select = document.getElementById("itemDetailSelect");
+  const selectedOption = select.selectedOptions[0];
+
+  const item = selectedOption ? selectedOption.dataset.item : "";
+  const selectedSemana = selectedOption ? selectedOption.dataset.semana : "";
   const estadoFilter = document.getElementById("detailEstadoFilter").value;
 
   if (!item) {
@@ -641,33 +690,29 @@ function renderDetalleProducto() {
     renderTable("detalleTable", [], [
       "Item madre",
       "Semana",
+      "Cantidad plan",
       "Componente",
       "Cantidad escandallo",
       "Necesidad componente",
       "Stock actual",
+      "Consumo anterior",
+      "Stock disponible",
+      "Stock restante",
       "Plazo entrega",
       "Estado"
     ]);
     return;
   }
 
-  const selectedOption = document.getElementById("itemDetailSelect").selectedOptions[0];
-  const selectedSemana = selectedOption ? selectedOption.dataset.semana : "";
-  
-  let rows = state.explosion.filter((row) => {
+  const allRows = state.explosion.filter((row) => {
     const rowItem = getValue(row, ["Item madre", "Item"]);
-    const rowSemana = String(getValue(row, ["Semana"]));
-  
-    if (String(rowItem) !== String(item)) {
-      return false;
-    }
-  
-    if (selectedSemana && String(rowSemana) !== String(selectedSemana)) {
-      return false;
-    }
-  
-    return true;
+    const rowSemana = getValue(row, ["Semana"]);
+
+    return String(rowItem) === String(item) &&
+      String(rowSemana) === String(selectedSemana);
   });
+
+  let rows = [...allRows];
 
   if (estadoFilter) {
     rows = rows.filter((row) => {
@@ -675,12 +720,12 @@ function renderDetalleProducto() {
     });
   }
 
-  const total = rows.length;
-  const faltan = rows.filter((row) => getValue(row, ["Estado"]) === "FALTA").length;
-  const ok = rows.filter((row) => getValue(row, ["Estado"]) === "OK").length;
+  const total = allRows.length;
+  const faltan = allRows.filter((row) => getValue(row, ["Estado"]) === "FALTA").length;
+  const ok = allRows.filter((row) => getValue(row, ["Estado"]) === "OK").length;
 
   document.getElementById("detailSummary").innerHTML = `
-    <div class="detail-pill"><strong>${escapeHtml(item)}</strong></div>
+    <div class="detail-pill"><strong>${escapeHtml(item)} - Sem ${escapeHtml(selectedSemana)}</strong></div>
     <div class="detail-pill">Componentes: <strong>${total}</strong></div>
     <div class="detail-pill">OK: <strong>${ok}</strong></div>
     <div class="detail-pill">Faltan: <strong>${faltan}</strong></div>
@@ -694,6 +739,9 @@ function renderDetalleProducto() {
     "Cantidad escandallo": getValue(row, ["Cantidad escandallo"]),
     "Necesidad componente": getValue(row, ["Necesidad componente", "Necesidad"]),
     "Stock actual": getValue(row, ["Stock actual", "Stock"]),
+    "Consumo anterior": getValue(row, ["Consumo acumulado anterior"]),
+    "Stock disponible": getValue(row, ["Stock disponible semana", "Stock actual", "Stock"]),
+    "Stock restante": getValue(row, ["Stock restante tras consumo"]),
     "Plazo entrega": getValue(row, ["Plazo entrega", "Plazo de entrega"]),
     "Estado": getValue(row, ["Estado"])
   }));
@@ -706,6 +754,9 @@ function renderDetalleProducto() {
     "Cantidad escandallo",
     "Necesidad componente",
     "Stock actual",
+    "Consumo anterior",
+    "Stock disponible",
+    "Stock restante",
     "Plazo entrega",
     "Estado"
   ];
@@ -715,6 +766,9 @@ function renderDetalleProducto() {
     "Cantidad escandallo": formatNumber,
     "Necesidad componente": formatNumber,
     "Stock actual": formatNumber,
+    "Consumo anterior": formatNumber,
+    "Stock disponible": formatNumber,
+    "Stock restante": formatNumber,
     "Estado": renderEstadoBadge
   });
 }
