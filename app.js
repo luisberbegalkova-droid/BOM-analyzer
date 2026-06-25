@@ -106,6 +106,8 @@ async function loadAllData() {
     state.explosion = explosion;
     state.componentes = componentes;
 
+    state.selectedProduct = null;
+
     console.log("Escenario:", currentScenario);
     console.log("Selector name:", selectorName);
     console.log("Selector length:", selector.length);
@@ -546,6 +548,22 @@ function renderComponentes() {
     "Déficit acumulado hasta primera semana": formatNumber,
     "Prioridad": renderPrioridadBadge
   });
+
+  if (!SCENARIOS[currentScenario].showComponentesCriticos) {
+  const tbody = document.getElementById("componentesTableBody");
+
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="13" class="empty-state">
+          Componentes críticos solo aplica al escenario “Cumplir plan acumulado”.
+        </td>
+      </tr>
+    `;
+  }
+
+  return;
+}
 }
 
 function renderSinBom() {
@@ -593,7 +611,8 @@ function renderItemSelect() {
   items.forEach((item) => {
     const option = document.createElement("option");
     option.value = item;
-    option.textContent = item;
+    option.textContent = `${item} - Sem ${semana}`;
+    option.dataset.semana = semana;
     select.appendChild(option);
   });
 }
@@ -632,8 +651,22 @@ function renderDetalleProducto() {
     return;
   }
 
+  const selectedOption = document.getElementById("itemDetailSelect").selectedOptions[0];
+  const selectedSemana = selectedOption ? selectedOption.dataset.semana : "";
+  
   let rows = state.explosion.filter((row) => {
-    return getValue(row, ["Item madre", "Item"]) === item;
+    const rowItem = getValue(row, ["Item madre", "Item"]);
+    const rowSemana = String(getValue(row, ["Semana"]));
+  
+    if (String(rowItem) !== String(item)) {
+      return false;
+    }
+  
+    if (selectedSemana && String(rowSemana) !== String(selectedSemana)) {
+      return false;
+    }
+  
+    return true;
   });
 
   if (estadoFilter) {
