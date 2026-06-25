@@ -79,9 +79,19 @@ async function loadAllData() {
   try {
     const scenario = SCENARIOS[currentScenario];
 
+    const selectorName =
+      currentScenario === "inicial"
+        ? "Selector_Referencias_Inicial"
+        : "Selector_Referencias";
+
+    const explosionName =
+      currentScenario === "inicial"
+        ? "Explosion_Necesidades_Inicial"
+        : "Explosion_Necesidades";
+
     const [selector, explosion, componentes] = await Promise.all([
-      loadCsv(scenario.selector, "Selector_Referencias"),
-      loadCsv(scenario.explosion, "Explosion_Necesidades"),
+      loadCsv(scenario.selector, selectorName),
+      loadCsv(scenario.explosion, explosionName),
       scenario.showComponentesCriticos
         ? loadCsv(scenario.componentes, "Componentes_Criticos")
         : Promise.resolve([])
@@ -92,12 +102,11 @@ async function loadAllData() {
     state.componentes = componentes;
 
     console.log("Escenario:", currentScenario);
+    console.log("Selector name:", selectorName);
     console.log("Selector length:", selector.length);
     console.log("Selector first row:", selector[0]);
 
-    console.log("Componentes length:", componentes.length);
-    console.log("Componentes first row:", componentes[0]);
-
+    console.log("Explosion name:", explosionName);
     console.log("Explosion length:", explosion.length);
     console.log("Explosion first row:", explosion[0]);
 
