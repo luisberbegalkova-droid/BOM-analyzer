@@ -54,6 +54,11 @@ function setupEvents() {
   document.getElementById("accionFilter").addEventListener("change", renderComponentes);
 
   document.getElementById("itemDetailSelect").addEventListener("change", renderDetalleProducto);
+  const detailEstadoFilter = document.getElementById("detailEstadoFilter");
+  if (detailEstadoFilter) {
+    detailEstadoFilter.value = "FALTA";
+  }
+  
   document.getElementById("detailEstadoFilter").addEventListener("change", renderDetalleProducto);
 }
 
