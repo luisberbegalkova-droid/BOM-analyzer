@@ -1,8 +1,22 @@
-const CSV_URLS = {
-  selector: "/api/sheet?tab=Selector_Referencias",
-  componentes: "/api/sheet?tab=Componentes_Criticos",
-  explosion: "/api/sheet?tab=Explosion_Necesidades"
+const SCENARIOS = {
+  acumulado: {
+    label: "Cumplir plan acumulado",
+    selector: "/api/sheet?tab=Selector_Referencias",
+    explosion: "/api/sheet?tab=Explosion_Necesidades",
+    componentes: "/api/sheet?tab=Componentes_Criticos",
+    showComponentesCriticos: true
+  },
+
+  inicial: {
+    label: "Foto stock inicial",
+    selector: "/api/sheet?tab=Selector_Referencias_Inicial",
+    explosion: "/api/sheet?tab=Explosion_Necesidades_Inicial",
+    componentes: "/api/sheet?tab=Componentes_Criticos",
+    showComponentesCriticos: false
+  }
 };
+
+let currentScenario = "acumulado";
 
 const state = {
   selector: [],
@@ -19,6 +33,17 @@ document.addEventListener("DOMContentLoaded", () => {
 function setupEvents() {
   document.getElementById("refreshBtn").addEventListener("click", loadAllData);
 
+  const scenarioSelect = document.getElementById("scenarioSelect");
+
+  if (scenarioSelect) {
+    scenarioSelect.value = currentScenario;
+
+    scenarioSelect.addEventListener("change", async function () {
+      currentScenario = scenarioSelect.value;
+      await loadAllData();
+    });
+  }
+  
   document.getElementById("selectorSearch").addEventListener("input", renderSelector);
   document.getElementById("estadoFilter").addEventListener("change", renderSelector);
   document.getElementById("decisionFilter").addEventListener("change", renderSelector);
@@ -52,16 +77,21 @@ async function loadAllData() {
   showError("");
 
   try {
-    const [selector, componentes, explosion] = await Promise.all([
-      loadCsv(CSV_URLS.selector, "Selector_Referencias"),
-      loadCsv(CSV_URLS.componentes, "Componentes_Criticos"),
-      loadCsv(CSV_URLS.explosion, "Explosion_Necesidades")
+    const scenario = SCENARIOS[currentScenario];
+
+    const [selector, explosion, componentes] = await Promise.all([
+      loadCsv(scenario.selector, "Selector_Referencias"),
+      loadCsv(scenario.explosion, "Explosion_Necesidades"),
+      scenario.showComponentesCriticos
+        ? loadCsv(scenario.componentes, "Componentes_Criticos")
+        : Promise.resolve([])
     ]);
 
     state.selector = selector;
-    state.componentes = componentes;
     state.explosion = explosion;
+    state.componentes = componentes;
 
+    console.log("Escenario:", currentScenario);
     console.log("Selector length:", selector.length);
     console.log("Selector first row:", selector[0]);
 
