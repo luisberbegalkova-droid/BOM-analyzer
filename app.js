@@ -690,13 +690,13 @@ function renderDetalleProducto() {
   if (!item) {
     document.getElementById("detailSummary").innerHTML = "";
     renderTable("detalleTable", [], [
-      "Componente"
-      "Cantidad escandallo"
-      "Necesidad componente"
-      "Stock restante"
-      "Plazo entrega"
+      "Componente",
+      "Cantidad escandallo",
+      "Necesidad componente",
+      "Stock restante",
+      "Plazo entrega",
       "Estado"
-          ]);
+    ]);
     return;
   }
 
@@ -728,42 +728,26 @@ function renderDetalleProducto() {
   `;
 
   const displayRows = rows.map((row) => ({
-    "Item madre": getValue(row, ["Item madre", "Item"]),
-    "Semana": getValue(row, ["Semana"]),
-    "Cantidad plan": getValue(row, ["Cantidad plan", "Cantidad"]),
     "Componente": getValue(row, ["Componente"]),
     "Cantidad escandallo": getValue(row, ["Cantidad escandallo"]),
     "Necesidad componente": getValue(row, ["Necesidad componente", "Necesidad"]),
-    "Stock actual": getValue(row, ["Stock actual", "Stock"]),
-    "Consumo anterior": getValue(row, ["Consumo acumulado anterior"]),
-    "Stock disponible": getValue(row, ["Stock disponible semana", "Stock actual", "Stock"]),
     "Stock restante": getValue(row, ["Stock restante tras consumo"]),
     "Plazo entrega": getValue(row, ["Plazo entrega", "Plazo de entrega"]),
     "Estado": getValue(row, ["Estado"])
   }));
 
   const columns = [
-    "Item madre",
-    "Semana",
-    "Cantidad plan",
     "Componente",
     "Cantidad escandallo",
     "Necesidad componente",
-    "Stock actual",
-    "Consumo anterior",
-    "Stock disponible",
     "Stock restante",
     "Plazo entrega",
     "Estado"
   ];
 
   renderTable("detalleTable", displayRows, columns, {
-    "Cantidad plan": formatNumber,
     "Cantidad escandallo": formatNumber,
     "Necesidad componente": formatNumber,
-    "Stock actual": formatNumber,
-    "Consumo anterior": formatNumber,
-    "Stock disponible": formatNumber,
     "Stock restante": formatNumber,
     "Estado": renderEstadoBadge
   });
