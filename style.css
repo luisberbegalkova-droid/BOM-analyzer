@@ -291,3 +291,30 @@ tr:hover td {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+.top-actions {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.scenario-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scenario-selector label {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.scenario-selector select {
+  min-width: 220px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d0d5dd;
+  background: white;
+  font-size: 14px;
+}
