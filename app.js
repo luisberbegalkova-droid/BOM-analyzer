@@ -446,38 +446,29 @@ function renderSelector() {
   });
 
   const displayRows = rows.map((row) => ({
-    "Item madre": getValue(row, ["Item madre", "Item"]),
-    "Semana": getValue(row, ["Semana"]),
-    "Cantidad plan": getValue(row, ["Cantidad plan", "Cantidad"]),
-    "Componentes faltantes": getValue(row, ["Componentes faltantes", "Faltantes"]),
-    "% cubierto": getValue(row, ["% cubierto", "Cubierto"]),
-    "Unidades posibles": getValue(row, ["Unidades posibles"]),
-    "Estado": getValue(row, ["Estado"]),
-    "Score prioridad": getValue(row, ["Score prioridad", "Score"]),
-    "Decisión sugerida": getValue(row, ["Decisión sugerida", "Decision sugerida"])
-  }));
+  "Componente": getValue(row, ["Componente"]),
+  "Cantidad escandallo": getValue(row, ["Cantidad escandallo"]),
+  "Necesidad componente": getValue(row, ["Necesidad componente", "Necesidad"]),
+  "Stock restante": getValue(row, ["Stock restante tras consumo"]),
+  "Plazo entrega": getValue(row, ["Plazo entrega", "Plazo de entrega"]),
+  "Estado": getValue(row, ["Estado"])
+}));
 
-  const columns = [
-    "Item madre",
-    "Semana",
-    "Cantidad plan",
-    "Componentes faltantes",
-    "% cubierto",
-    "Unidades posibles",
-    "Estado",
-    "Score prioridad",
-    "Decisión sugerida"
-  ];
+const columns = [
+  "Componente",
+  "Cantidad escandallo",
+  "Necesidad componente",
+  "Stock restante",
+  "Plazo entrega",
+  "Estado"
+];
 
-  renderTable("selectorTable", displayRows, columns, {
-    "Item madre": (value, row) =>
-      `<span class="clickable" onclick="openDetail('${escapeAttr(value)}', '${escapeAttr(row["Semana"])}')">${escapeHtml(value)}</span>`,
-    "% cubierto": formatPercent,
-    "Cantidad plan": formatNumber,
-    "Unidades posibles": formatNumber,
-    "Estado": renderEstadoBadge,
-    "Decisión sugerida": renderDecisionBadge
-  });
+renderTable("detalleTable", displayRows, columns, {
+  "Cantidad escandallo": formatNumber,
+  "Necesidad componente": formatNumber,
+  "Stock restante": formatNumber,
+  "Estado": renderEstadoBadge
+});
 }
 
 function renderComponentes() {
