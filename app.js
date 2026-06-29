@@ -265,6 +265,13 @@ function normalize(value) {
     .trim();
 }
 
+function normalizarItemParaComparar(value) {
+  return String(value || "")
+    .trim()
+    .split(" ")[0]
+    .toUpperCase();
+}
+
 function getValue(row, possibleKeys) {
   const keys = Object.keys(row || {});
 
@@ -677,12 +684,14 @@ function openDetail(item, semana = "") {
     const optItem = opt.dataset.item || "";
     const optSemana = opt.dataset.semana || "";
 
-    return String(optItem) === String(decodedItem) &&
+    return normalizarItemParaComparar(optItem) === normalizarItemParaComparar(decodedItem) &&
       (!decodedSemana || String(optSemana) === String(decodedSemana));
   });
 
   if (option) {
     select.value = option.value;
+  } else {
+    console.warn("No se encontró opción de detalle para:", decodedItem, decodedSemana);
   }
 
   renderDetalleProducto();
@@ -713,8 +722,8 @@ function renderDetalleProducto() {
     const rowItem = getValue(row, ["Item madre", "Item"]);
     const rowSemana = getValue(row, ["Semana"]);
 
-    return String(rowItem) === String(item) &&
-      String(rowSemana) === String(selectedSemana);
+    return normalizarItemParaComparar(rowItem) === normalizarItemParaComparar(item) &&
+  String(rowSemana) === String(selectedSemana);
   });
 
   let rows = [...allRows];
