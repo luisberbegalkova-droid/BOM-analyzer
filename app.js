@@ -622,15 +622,7 @@ function renderItemSelect() {
 
   const pares = [];
 
-  const source =
-    state.explosion && state.explosion.length > 0
-      ? state.explosion
-      : state.selector;
-
-  console.log("renderItemSelect source length:", source.length);
-  console.log("renderItemSelect first row:", source[0]);
-
-  source.forEach((row) => {
+  state.selector.forEach((row) => {
     const item = getValue(row, ["Item madre", "Item"]);
     const semana = getValue(row, ["Semana"]);
 
